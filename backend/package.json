@@ -1,0 +1,33 @@
+{
+  "name": "mova-backend",
+  "version": "1.0.0",
+  "description": "API REST de MOVA (solo método POST) - Node.js + Express + MySQL",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "db:init": "node scripts/initDb.js",
+    "db:seed:generate": "node database/generate-seed.js",
+    "test": "node scripts/smokeTest.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.9",
+    "express": "^4.22.3",
+    "express-rate-limit": "^8.7.1",
+    "google-auth-library": "^11.3.1",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.12.1",
+    "mysql2": "^3.24.6",
+    "node-cron": "^4.6.0",
+    "nodemailer": "^10.2.1",
+    "zod": "^3.25.76"
+  }
+}
