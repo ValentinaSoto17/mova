@@ -1,5 +1,8 @@
 {
-  "cli": { "version": ">= 12.0.0", "appVersionSource": "local" },
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "local"
+  },
   "build": {
     "development": {
       "developmentClient": true,
@@ -7,17 +10,27 @@
     },
     "preview": {
       "distribution": "internal",
-      "android": { "buildType": "apk" },
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://mova-api.onrender.com",
-        "EXPO_PUBLIC_DEMO_MODE": "true"
+        "EXPO_PUBLIC_API_URL": "https://mova-nwyl.onrender.com",
+        "EXPO_PUBLIC_DEMO_MODE": "false",
+        "EXPO_PUBLIC_SOCIAL_DEMO": "false",
+        "EXPO_PUBLIC_GITHUB_CLIENT_ID": "Ov23liFcuDy2Y5SL6RzV",
+        "EXPO_PUBLIC_DISCORD_CLIENT_ID": "1564832363224113223"
       }
     },
     "production": {
-      "android": { "buildType": "app-bundle" },
+      "android": {
+        "buildType": "app-bundle"
+      },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://mova-api.onrender.com",
-        "EXPO_PUBLIC_DEMO_MODE": "false"
+        "EXPO_PUBLIC_API_URL": "https://mova-nwyl.onrender.com",
+        "EXPO_PUBLIC_DEMO_MODE": "false",
+        "EXPO_PUBLIC_SOCIAL_DEMO": "false",
+        "EXPO_PUBLIC_GITHUB_CLIENT_ID": "Ov23liFcuDy2Y5SL6RzV",
+        "EXPO_PUBLIC_DISCORD_CLIENT_ID": "1564832363224113223"
       }
     }
   }
