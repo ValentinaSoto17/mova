@@ -6,11 +6,24 @@
 import Constants from 'expo-constants';
 import { secure } from './storage';
 
-export const API_URL = (
-  process.env.EXPO_PUBLIC_API_URL ||
-  Constants.expoConfig?.extra?.apiUrl ||
-  'http://localhost:4000'
-).replace(/\/$/, '');
+// Servidor publicado en Render (se usa siempre que la app no corre en la propia computadora)
+const PROD_API_URL = 'https://mova-nwyl.onrender.com';
+
+function resolveApiUrl() {
+  const configured = (
+    process.env.EXPO_PUBLIC_API_URL ||
+    Constants.expoConfig?.extra?.apiUrl ||
+    ''
+  ).trim().replace(/\/$/, '');
+  const host = typeof window !== 'undefined' && window.location ? window.location.hostname : '';
+  // En la página publicada (https://...vercel.app) nunca se usa una dirección local
+  if (host && host !== 'localhost' && host !== '127.0.0.1' && !/^192\.168\./.test(host)) {
+    if (!configured || /localhost|127\.0\.0\.1|192\.168\.|^http:/.test(configured)) return PROD_API_URL;
+  }
+  return configured || 'http://localhost:4000';
+}
+
+export const API_URL = resolveApiUrl();
 
 const KEYS = { access: 'mova.access', refresh: 'mova.refresh' };
 let accessToken = null;
@@ -65,7 +78,7 @@ export const setSessionLostHandler = (fn) => {
   onSessionLost = fn;
 };
 
-async function rawPost(path, body, token, timeoutMs = 20000) {
+async function rawPost(path, body, token, timeoutMs = 75000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   let res;
@@ -81,7 +94,7 @@ async function rawPost(path, body, token, timeoutMs = 20000) {
       code: e.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK',
       message:
         e.name === 'AbortError'
-          ? 'El servidor tardó demasiado en responder. Revisá tu conexión.'
+          ? 'El servidor está despertando (el plan gratuito se duerme tras 15 min sin uso). Esperá unos segundos y tocá Ingresar de nuevo.'
           : `No hay conexión con el servidor (${API_URL}). Verificá que el backend esté encendido y que EXPO_PUBLIC_API_URL apunte a él.`,
     });
   } finally {
