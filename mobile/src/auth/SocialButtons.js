@@ -87,12 +87,19 @@ function GoogleButton({ onToken, busy, onError }) {
   return <SocialBtn wide label="Google" icon="google" color="#EA4335" loading={busy === 'google'} onPress={() => openProvider(promptAsync, request, 'Google', onError)} />;
 }
 
+// GitHub y Discord exigen que la dirección de regreso coincida EXACTAMENTE con la registrada.
+// En la web se usa la dirección principal de la página, sin barra final (ej.: https://mova-mobile.vercel.app).
+function webOrNativeRedirect() {
+  if (Platform.OS === 'web' && typeof window !== 'undefined') return window.location.origin;
+  return AuthSession.makeRedirectUri({ scheme: 'mova', path: 'oauth' });
+}
+
 const githubDiscovery = {
   authorizationEndpoint: 'https://github.com/login/oauth/authorize',
   tokenEndpoint: 'https://github.com/login/oauth/access_token',
 };
 function GitHubButton({ onToken, busy, onError }) {
-  const redirectUri = Platform.OS === 'web' ? AuthSession.makeRedirectUri() : AuthSession.makeRedirectUri({ scheme: 'mova', path: 'oauth' });
+  const redirectUri = webOrNativeRedirect();
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     { clientId: CFG.github, scopes: ['read:user', 'user:email'], redirectUri, usePKCE: true },
     githubDiscovery
@@ -111,7 +118,7 @@ const discordDiscovery = {
   tokenEndpoint: 'https://discord.com/api/oauth2/token',
 };
 function DiscordButton({ onToken, busy, onError }) {
-  const redirectUri = Platform.OS === 'web' ? AuthSession.makeRedirectUri() : AuthSession.makeRedirectUri({ scheme: 'mova', path: 'oauth' });
+  const redirectUri = webOrNativeRedirect();
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     { clientId: CFG.discord, scopes: ['identify', 'email'], redirectUri, usePKCE: false },
     discordDiscovery
