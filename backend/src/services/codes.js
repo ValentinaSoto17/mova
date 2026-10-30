@@ -17,8 +17,15 @@ async function createAndSend(user, tipo) {
      VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE))`,
     [user.id_usuario, tipo, await bcrypt.hash(code, 8)]
   );
-  await sendCode(user.email, code, tipo);
-  // En desarrollo sin SMTP se devuelve el código para poder probar la app
+  try {
+    await sendCode(user.email, code, tipo);
+  } catch (err) {
+    console.error('[MAIL] No se pudo enviar el código:', err.message);
+    // Si el envío falla y DEV_SHOW_CODES=true, el código se muestra en pantalla para no trabar la demo
+    if (env.devShowCodes) return { devCode: code };
+    throw new HttpError(503, 'MAIL_FAILED', 'No pudimos enviar el email con el código. Probá de nuevo en unos minutos.');
+  }
+  // En desarrollo sin email configurado se devuelve el código para poder probar la app
   return env.devShowCodes && !mailConfigured ? { devCode: code } : {};
 }
 

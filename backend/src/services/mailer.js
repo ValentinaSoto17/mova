@@ -1,9 +1,15 @@
 const nodemailer = require('nodemailer');
 const env = require('../config/env');
 
-const configured = Boolean(env.smtp.host && env.smtp.user && env.smtp.pass);
+// Opción 1 (recomendada en Render gratis): API HTTP de Brevo. Render bloquea los puertos SMTP en el plan gratuito.
+const brevoKey = process.env.BREVO_API_KEY || '';
+const brevoSender = process.env.BREVO_SENDER_EMAIL || env.smtp.user || '';
+const useBrevo = Boolean(brevoKey && brevoSender);
+// Opción 2: SMTP clásico (Gmail con contraseña de aplicación). Sirve en la computadora local.
+const smtpConfigured = Boolean(env.smtp.host && env.smtp.user && env.smtp.pass);
+const configured = useBrevo || smtpConfigured;
 
-const transporter = configured
+const transporter = !useBrevo && smtpConfigured
   ? nodemailer.createTransport({
       host: env.smtp.host,
       port: env.smtp.port,
@@ -28,7 +34,17 @@ async function sendMail({ to, subject, title, html }) {
     console.log(`[MAIL simulado] Para: ${to} | ${subject}\n${html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')}`);
     return { simulated: true };
   }
-  await transporter.sendMail({ from: env.smtp.from, to, subject, html: layout(title || subject, html) });
+  const content = layout(title || subject, html);
+  if (useBrevo) {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': brevoKey, 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ sender: { name: 'MOVA', email: brevoSender }, to: [{ email: to }], subject, htmlContent: content }),
+    });
+    if (!res.ok) throw new Error(`Brevo respondió ${res.status}: ${await res.text()}`);
+    return { simulated: false };
+  }
+  await transporter.sendMail({ from: env.smtp.from, to, subject, html: content });
   return { simulated: false };
 }
 
