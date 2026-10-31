@@ -61,6 +61,25 @@ export default function UserDetail({ route, navigation }) {
     }
   };
 
+  // Eliminación definitiva (solo Administrador): pide confirmación y la API vuelve a verificar el rol
+  const doDelete = async () => {
+    const yes = await confirm({
+      title: `¿Eliminar a ${fullName(u)}?`,
+      message: 'Se borra la cuenta y todos sus datos (progreso, cuotas, mensajes y préstamos). Esta acción NO se puede deshacer. Si solo querés impedir el acceso, usá "Bloquear cuenta".',
+      confirmText: 'Eliminar definitivamente',
+      danger: true,
+      icon: 'account-remove',
+    });
+    if (!yes) return;
+    try {
+      await run('/admin/users/manage', { accion: 'eliminar', id_usuario, confirmacion: true });
+      toast('Usuario eliminado', 'info');
+      navigation.goBack();
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  };
+
   const changeRole = async (rol) => {
     if (rol === u.rol) return;
     if (!(await confirm({ title: `¿Cambiar rol a ${rol}?`, message: `${fullName(u)} pasará de ${u.rol} a ${rol} y tendrá otros permisos.`, confirmText: 'Cambiar rol' }))) return;
@@ -209,7 +228,9 @@ export default function UserDetail({ route, navigation }) {
                 ) : (
                   <Button title="Desbloquear cuenta" icon="lock-open-variant" variant="success" onPress={doUnblock} loading={busy} />
                 )}
-                <T v="small" color={c.textSoft} style={{ marginTop: space.sm, textAlign: 'center' }}>Las cuentas nunca se eliminan: se bloquean y conservan su historial.</T>
+                <View style={{ height: space.sm }} />
+                <Button title="Eliminar usuario" icon="account-remove" variant="outline" onPress={doDelete} loading={busy} />
+                <T v="small" color={c.textSoft} style={{ marginTop: space.sm, textAlign: 'center' }}>Bloquear conserva la cuenta y su historial. Eliminar la borra para siempre.</T>
               </Card>
             </>
           )}

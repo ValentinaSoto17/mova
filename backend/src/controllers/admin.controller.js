@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { query, one } = require('../config/db');
+const { query, one, transaction } = require('../config/db');
 const { ok, errors } = require('../utils/http');
 const { z, parse, rules } = require('../utils/validate');
 const { notify, unblockUser } = require('../services/accounts');
@@ -50,7 +50,44 @@ exports.manageUser = async (req, res) => {
     telefono: z.string().trim().max(30).nullable().optional(),
     id_entrenador: rules.id.nullable().optional(),
   };
-  const { accion } = parse(z.object({ accion: z.enum(['crear', 'editar']) }), req.body);
+  const { accion } = parse(z.object({ accion: z.enum(['crear', 'editar', 'eliminar']) }), req.body);
+
+  // Eliminación definitiva: solo el Administrador (la ruta ya está protegida con requireRole('Administrador'))
+  if (accion === 'eliminar') {
+    const d = parse(z.object({ id_usuario: rules.id, confirmacion: rules.confirm }), req.body);
+    if (d.id_usuario === req.user.id_usuario) throw errors.badRequest('No podés eliminar tu propia cuenta');
+    const target = await one('SELECT id_usuario, id_rol, nombre, apellido FROM users WHERE id_usuario = ?', [d.id_usuario]);
+    if (!target) throw errors.notFound('El usuario no existe');
+    if (target.id_rol === ROLES.Administrador) {
+      const admins = await one('SELECT COUNT(*) AS n FROM users WHERE id_rol = ?', [ROLES.Administrador]);
+      if (Number(admins.n) <= 1) throw errors.badRequest('No se puede eliminar al único administrador');
+    }
+    const admin = req.user.id_usuario;
+    await transaction(async (conn) => {
+      const q = (sql, params) => conn.query(sql, params);
+      // Si era entrenador, sus rutinas y asignaciones pasan al administrador para no perder el historial de los alumnos
+      await q('UPDATE routines SET id_entrenador = ? WHERE id_entrenador = ?', [admin, d.id_usuario]);
+      await q('UPDATE assignments SET id_entrenador = ? WHERE id_entrenador = ?', [admin, d.id_usuario]);
+      await q('UPDATE users SET id_entrenador = NULL WHERE id_entrenador = ?', [d.id_usuario]);
+      // Datos propios del usuario (como alumno)
+      await q(
+        `DELETE pd FROM progress_details pd JOIN progress p ON p.id_progreso = pd.id_progreso
+           JOIN assignments a ON a.id_asignacion = p.id_asignacion WHERE a.id_alumno = ?`,
+        [d.id_usuario]
+      );
+      await q('DELETE p FROM progress p JOIN assignments a ON a.id_asignacion = p.id_asignacion WHERE a.id_alumno = ?', [d.id_usuario]);
+      await q('DELETE FROM assignments WHERE id_alumno = ?', [d.id_usuario]);
+      await q('DELETE FROM attendance WHERE id_usuario = ?', [d.id_usuario]);
+      await q('DELETE FROM memberships WHERE id_usuario = ?', [d.id_usuario]);
+      await q('DELETE FROM equipment_loans WHERE id_alumno = ?', [d.id_usuario]);
+      await q('DELETE FROM notifications WHERE id_usuario = ?', [d.id_usuario]);
+      await q('DELETE FROM user_blocks WHERE id_usuario = ?', [d.id_usuario]);
+      await q('DELETE FROM messages WHERE id_emisor = ? OR id_receptor = ? OR id_hilo_gimnasio = ?', [d.id_usuario, d.id_usuario, d.id_usuario]);
+      // Cuentas sociales, sesiones y códigos se borran en cascada
+      await q('DELETE FROM users WHERE id_usuario = ?', [d.id_usuario]);
+    });
+    return ok(res, { eliminado: true, id_usuario: d.id_usuario });
+  }
 
   if (accion === 'crear') {
     const d = parse(z.object({ ...base, password: rules.password }), req.body);

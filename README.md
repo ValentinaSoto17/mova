@@ -9,7 +9,7 @@ Aplicación móvil para la gestión integral de un gimnasio, con tres perfiles: 
 | App | React Native + Expo (SDK 58), React Navigation (Stack + Drawer + Tabs), Context API con sesión persistente |
 | API | Node.js + Express, **solo método POST**, JWT (acceso + renovación con rotación), bcrypt, zod |
 | Base de datos | **MySQL en la nube** (Aiven / Railway / TiDB Cloud), normalizada en 3FN, conexión SSL |
-| Extras | Login con Google, Facebook, Apple y GitHub · verificación por email + doble factor · avisos automáticos · manual interactivo + PDF |
+| Extras | Login con Google, GitHub y Discord · verificación por email + doble factor · avisos automáticos · manual interactivo + PDF |
 
 ---
 
@@ -82,7 +82,7 @@ messages → users (receptor) | suppliers (distribuidora) | hilo del gimnasio (a
 - **1FN**: atributos atómicos, sin listas en columnas.
 - **2FN**: claves primarias simples → no hay dependencias parciales.
 - **3FN**: sin dependencias transitivas. Por ejemplo, el nombre del rol está en `roles`, el grupo muscular en `muscle_groups`; en `progress` **no** se repite el alumno porque se obtiene por `assignments`; el stock disponible del equipamiento **no** se guarda, se calcula a partir de los préstamos.
-- Política: los usuarios **nunca se eliminan** (`estado = bloqueado` + historial en `user_blocks`). Ejercicios y rutinas usan baja lógica (`activo = FALSE`) para conservar el historial.
+- Política: por defecto los usuarios se **bloquean** (`estado = bloqueado` + historial en `user_blocks`). Solo el **Administrador** puede eliminarlos definitivamente con `POST /api/admin/users/manage` (`accion: "eliminar", id_usuario, confirmacion: true`); sus rutinas pasan al administrador y el resto de sus datos se borra en una transacción. Ejercicios y rutinas usan baja lógica (`activo = FALSE`).
 
 ---
 
@@ -136,11 +136,10 @@ Al terminar, EAS da un link para descargar el `.apk` listo para instalar.
 | Proveedor | Dónde se crea | Qué cargar |
 |---|---|---|
 | **Google** (obligatorio) | Google Cloud Console → Credenciales → ID de cliente OAuth (Web, Android con el SHA-1 de EAS, iOS) | App: `EXPO_PUBLIC_GOOGLE_*_CLIENT_ID` · API: `GOOGLE_CLIENT_IDS` |
-| **Facebook** | developers.facebook.com → Crear app → Inicio de sesión con Facebook | App: `EXPO_PUBLIC_FACEBOOK_APP_ID` · API: `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` |
+| **Discord** | discord.com/developers/applications → New Application → OAuth2 (redirect `http://localhost:8081/oauth`) | App: `EXPO_PUBLIC_DISCORD_CLIENT_ID` · API: `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` |
 | **GitHub** | Settings → Developer settings → OAuth Apps (callback `mova://oauth`) | App: `EXPO_PUBLIC_GITHUB_CLIENT_ID` · API: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` |
-| **Apple** | Apple Developer (solo iPhone) | `APPLE_BUNDLE_ID=com.eest5.mova` |
 
-La app obtiene el token del proveedor y el **backend lo valida** con Google/Facebook/GitHub/Apple antes de crear la sesión. Los logins sociales funcionan en el APK/build de desarrollo (Expo Go tiene limitaciones con OAuth).
+La app obtiene el token del proveedor y el **backend lo valida** con Google/GitHub/Discord antes de crear la sesión. Los logins sociales funcionan en el APK/build de desarrollo (Expo Go tiene limitaciones con OAuth).
 
 ---
 
@@ -149,7 +148,7 @@ La app obtiene el token del proveedor y el **backend lo valida** con Google/Face
 | Requisito | Implementación |
 |---|---|
 | Mobile-first y responsive | Diseño pensado para celular; el contenido se centra con ancho máximo en tablet/web; grillas que pasan de 2 a 3 columnas |
-| Login + 3 redes + verificaciones | Email/contraseña (bcrypt), Google, Facebook, Apple, GitHub; verificación de email por código; doble factor opcional; recuperación de contraseña |
+| Login + 3 redes + verificaciones | Email/contraseña (bcrypt), Google, GitHub, Discord; verificación de email por código; doble factor opcional; recuperación de contraseña |
 | 3 roles | Alumno, Entrenador, Administrador con pestañas, pantallas y permisos propios (validados también en la API) |
 | Sin alerts | `FeedbackContext`: toasts y diálogos de confirmación propios; errores debajo de cada campo y banners |
 | Solo POST | Todas las rutas son `router.post`; middleware `postOnly` responde **405** a cualquier otro método |

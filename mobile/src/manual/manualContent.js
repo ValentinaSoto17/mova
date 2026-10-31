@@ -171,7 +171,7 @@ const roles = {
         'Buscá y filtrá por rol o estado.',
         'Creá cuentas nuevas o editá las existentes.',
         'Cambiá el rol (por ejemplo, promover un alumno a entrenador) — se pide confirmación.',
-        'Bloqueá o desbloqueá cuentas eligiendo el motivo; nunca se eliminan usuarios.',
+        'Bloqueá o desbloqueá cuentas eligiendo el motivo. Solo el administrador puede eliminar un usuario de forma definitiva (Usuarios → elegir usuario → Eliminar usuario), previa confirmación.',
       ],
     },
     {
