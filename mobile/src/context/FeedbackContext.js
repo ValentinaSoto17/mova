@@ -134,6 +134,6 @@ const styles = StyleSheet.create({
   dialog: { width: '100%', maxWidth: 400, borderRadius: radius.xl, padding: space.xl, alignItems: 'center' },
   dialogIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginBottom: space.lg },
   dialogActions: { flexDirection: 'row', gap: space.md, marginTop: space.xl, alignSelf: 'stretch' },
-  dialogBtn: { flex: 1, paddingVertical: 14, borderRadius: radius.md, alignItems: 'center' },
-  dialogBtnText: { fontFamily: font.bold, fontSize: 15 },
+  dialogBtn: { flex: 1, minHeight: 52, paddingVertical: 12, paddingHorizontal: space.sm, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  dialogBtnText: { fontFamily: font.bold, fontSize: 15, textAlign: 'center' },
 });

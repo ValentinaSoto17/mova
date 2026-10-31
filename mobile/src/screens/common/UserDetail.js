@@ -66,7 +66,7 @@ export default function UserDetail({ route, navigation }) {
     const yes = await confirm({
       title: `¿Eliminar a ${fullName(u)}?`,
       message: 'Se borra la cuenta y todos sus datos (progreso, cuotas, mensajes y préstamos). Esta acción NO se puede deshacer. Si solo querés impedir el acceso, usá "Bloquear cuenta".',
-      confirmText: 'Eliminar definitivamente',
+      confirmText: 'Sí, eliminar',
       danger: true,
       icon: 'account-remove',
     });
