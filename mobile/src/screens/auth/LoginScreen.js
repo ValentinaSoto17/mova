@@ -1,12 +1,12 @@
 import React, { useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, KeyboardAvoidingView, Platform } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, KeyboardAvoidingView, Platform, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useFeedback } from '../../context/FeedbackContext';
 import { LogoMark } from '../../components/Logo';
-import { Banner, Button, IconButton, Input, Row, T } from '../../components/ui';
+import { Banner, Button, Icon, IconButton, Input, Row, T } from '../../components/ui';
 import SocialButtons from '../../auth/SocialButtons';
 import { font, radius, space, shadow } from '../../theme/tokens';
 
@@ -15,6 +15,8 @@ export default function LoginScreen({ navigation }) {
   const { colors: c, toggle, isDark } = useTheme();
   const { toast } = useFeedback();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const wide = width >= 900; // computadora / tablet horizontal: logo a la izquierda y formulario a la derecha
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
@@ -65,25 +67,8 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
-  return (
-    <View style={{ flex: 1, backgroundColor: c.bg }}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + space.xxl }} keyboardShouldPersistTaps="handled">
-          <LinearGradient colors={[c.heroFrom, c.heroTo]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.hero, { paddingTop: insets.top + space.lg }]}>
-            <View style={[styles.glow, { top: -60, right: -40 }]} />
-            <View style={[styles.glow, { bottom: -80, left: -60, width: 200, height: 200 }]} />
-            <View style={styles.heroTop}>
-              <IconButton icon={isDark ? 'white-balance-sunny' : 'weather-night'} onPress={toggle} bg="rgba(255,255,255,0.18)" color="#fff" label="Cambiar tema" />
-            </View>
-            <View style={styles.logoTile}>
-              <LogoMark size={92} />
-            </View>
-            <Text style={styles.brand}>MOVA</Text>
-            <Text style={styles.tagline}>Entrena. Progresa. Evoluciona.</Text>
-          </LinearGradient>
-
-          <View style={styles.sheetWrap}>
-            <View style={[styles.sheet, { backgroundColor: c.surface, borderColor: c.border }, shadow(c, 2)]}>
+  const form = (
+    <>
               <T v="h1">Iniciá sesión</T>
               <T v="small" color={c.textMuted} style={{ marginBottom: space.lg }}>
                 Ingresá con tu cuenta y te llevamos a tu perfil.
@@ -141,8 +126,67 @@ export default function LoginScreen({ navigation }) {
                   <Text style={{ fontFamily: font.extrabold, color: c.primary, fontSize: 13 }}>Registrate</Text>
                 </Pressable>
               </Row>
-            </View>
+    </>
+  );
 
+  const themeBtn = (
+    <IconButton icon={isDark ? 'white-balance-sunny' : 'weather-night'} onPress={toggle} bg="rgba(255,255,255,0.18)" color="#fff" label="Cambiar tema" />
+  );
+
+  if (wide) {
+    return (
+      <View style={[styles.split, { backgroundColor: c.bg }]}>
+        <LinearGradient colors={[c.heroFrom, c.heroTo]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.side}>
+          <View style={[styles.glow, { top: -80, right: -60, width: 320, height: 320 }]} />
+          <View style={[styles.glow, { bottom: -100, left: -80, width: 280, height: 280 }]} />
+          <View style={[styles.logoTile, styles.logoTileWide]}>
+            <LogoMark size={128} />
+          </View>
+          <Text style={[styles.brand, styles.brandWide]}>MOVA</Text>
+          <Text style={[styles.tagline, { fontSize: 17 }]}>Entrena. Progresa. Evoluciona.</Text>
+          <View style={styles.features}>
+            {[
+              ['clipboard-list-outline', 'Rutinas armadas por tu entrenador'],
+              ['chart-line', 'Seguí tu progreso semana a semana'],
+              ['bell-ring-outline', 'Avisos de cuota y revisiones'],
+            ].map(([ic, txt]) => (
+              <View key={txt} style={styles.feature}>
+                <View style={styles.featureIcon}>
+                  <Icon name={ic} size={18} color="#fff" />
+                </View>
+                <Text style={styles.featureText}>{txt}</Text>
+              </View>
+            ))}
+          </View>
+        </LinearGradient>
+
+        <View style={{ flex: 1 }}>
+          <View style={[styles.themeCorner, { backgroundColor: c.primary, borderRadius: 999 }]}>{themeBtn}</View>
+          <ScrollView contentContainerStyle={styles.formSide} keyboardShouldPersistTaps="handled">
+            <View style={[styles.sheet, styles.sheetWide, { backgroundColor: c.surface, borderColor: c.border }, shadow(c, 2)]}>{form}</View>
+          </ScrollView>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ flex: 1, backgroundColor: c.bg }}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + space.xxl }} keyboardShouldPersistTaps="handled">
+          <LinearGradient colors={[c.heroFrom, c.heroTo]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.hero, { paddingTop: insets.top + space.lg }]}>
+            <View style={[styles.glow, { top: -60, right: -40 }]} />
+            <View style={[styles.glow, { bottom: -80, left: -60, width: 200, height: 200 }]} />
+            <View style={styles.heroTop}>{themeBtn}</View>
+            <View style={styles.logoTile}>
+              <LogoMark size={92} />
+            </View>
+            <Text style={styles.brand}>MOVA</Text>
+            <Text style={styles.tagline}>Entrena. Progresa. Evoluciona.</Text>
+          </LinearGradient>
+
+          <View style={styles.sheetWrap}>
+            <View style={[styles.sheet, { backgroundColor: c.surface, borderColor: c.border }, shadow(c, 2)]}>{form}</View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -160,4 +204,16 @@ const styles = StyleSheet.create({
   sheetWrap: { paddingHorizontal: space.lg, marginTop: -44, width: '100%', maxWidth: 520, alignSelf: 'center' },
   sheet: { borderRadius: radius.xl, padding: space.xl, borderWidth: 1 },
   line: { flex: 1, height: 1 },
+  // Pantalla ancha (computadora)
+  split: { flex: 1, flexDirection: 'row' },
+  side: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: space.xxl, overflow: 'hidden' },
+  logoTileWide: { width: 172, height: 172, borderRadius: 48 },
+  brandWide: { fontSize: 56, letterSpacing: 10 },
+  features: { marginTop: space.xxl, gap: space.md, alignSelf: 'center' },
+  feature: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  featureIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
+  featureText: { color: '#fff', fontFamily: font.semibold, fontSize: 15 },
+  formSide: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: space.xxl },
+  sheetWide: { width: '100%', maxWidth: 480 },
+  themeCorner: { position: 'absolute', top: space.lg, right: space.lg, zIndex: 2 },
 });
