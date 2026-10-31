@@ -215,5 +215,5 @@ const styles = StyleSheet.create({
   featureText: { color: '#fff', fontFamily: font.semibold, fontSize: 15 },
   formSide: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: space.xxl },
   sheetWide: { width: '100%', maxWidth: 480 },
-  themeCorner: { position: 'absolute', top: space.lg, right: space.lg, zIndex: 2 },
+  themeCorner: { position: 'absolute', top: space.lg, right: space.lg, zIndex: 2, width: 42, height: 42, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
 });

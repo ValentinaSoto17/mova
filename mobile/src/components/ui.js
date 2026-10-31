@@ -72,7 +72,7 @@ export function IconButton({ icon, onPress, color, bg, size = 22, label, style, 
       hitSlop={8}
       style={({ pressed }) => [styles.iconBtn, { backgroundColor: bg || c.surfaceAlt, opacity: pressed ? 0.7 : 1 }, style]}
     >
-      <Icon name={icon} size={size} color={color || c.text} />
+      <Icon name={icon} size={size} color={color || c.text} style={{ width: size, height: size, lineHeight: size, textAlign: 'center' }} />
       {!!badge && (
         <View style={[styles.badgeDot, { backgroundColor: c.coral, borderColor: c.bg }]}>
           <Text style={styles.badgeDotText}>{badge > 9 ? '9+' : badge}</Text>
