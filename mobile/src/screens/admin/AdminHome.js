@@ -57,8 +57,6 @@ export default function AdminHome({ navigation }) {
           <Row gap={space.md} style={{ marginTop: space.md, flexWrap: 'wrap' }}>
             <StatTile icon="account-group" label="Alumnos" value={s.usuarios.alumnos} color={c.primary} />
             <StatTile icon="whistle" label="Entrenadores" value={s.usuarios.entrenadores} color={c.success} />
-          </Row>
-          <Row gap={space.md} style={{ marginTop: space.md, flexWrap: 'wrap' }}>
             <StatTile icon="account-lock" label="Bloqueados" value={s.usuarios.bloqueados} color={c.danger} />
             <StatTile icon="account-plus" label="Nuevos (30 d)" value={s.usuarios.nuevos_mes} color={c.gold} />
           </Row>

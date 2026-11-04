@@ -1,5 +1,5 @@
 import React from 'react';
-import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, StyleSheet, Text, View, Pressable, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
@@ -15,9 +15,11 @@ export function Header({ title, subtitle, back, right }) {
   const { colors: c } = useTheme();
   const nav = useNavigation();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const pad = width >= 900 ? space.xxl : space.lg;
   return (
     <View style={[styles.header, { paddingTop: insets.top + space.sm, backgroundColor: c.bg, borderBottomColor: c.border }]}>
-      <View style={styles.headerInner}>
+      <View style={[styles.headerInner, { paddingHorizontal: pad }]}>
         {back ? (
           <IconButton icon="arrow-left" label="Volver" onPress={() => nav.goBack()} />
         ) : (
@@ -50,8 +52,11 @@ export function Header({ title, subtitle, back, right }) {
 export function Screen({ children, header, refreshing, onRefresh, scroll = true, footer, contentStyle, padded = true }) {
   const { colors: c } = useTheme();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  // En el celular margen chico; en computadora/tablet un margen mayor, pero usando todo el ancho
+  const pad = width >= 900 ? space.xxl : space.lg;
   const inner = (
-    <View style={[styles.content, padded && { paddingHorizontal: space.lg }, contentStyle]}>{children}</View>
+    <View style={[styles.content, padded && { paddingHorizontal: pad }, contentStyle]}>{children}</View>
   );
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
@@ -69,7 +74,7 @@ export function Screen({ children, header, refreshing, onRefresh, scroll = true,
           <View style={{ flex: 1, paddingTop: space.md }}>{inner}</View>
         )}
         {footer && (
-          <View style={[styles.footer, { backgroundColor: c.bg, borderTopColor: c.border, paddingBottom: insets.bottom + space.md }]}>
+          <View style={[styles.footer, { backgroundColor: c.bg, borderTopColor: c.border, paddingBottom: insets.bottom + space.md, paddingHorizontal: pad }]}>
             <View style={styles.content}>{footer}</View>
           </View>
         )}

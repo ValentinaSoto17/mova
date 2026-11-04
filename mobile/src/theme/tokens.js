@@ -35,4 +35,5 @@ export const shadow = (c, level = 1) =>
   });
 
 // Ancho máximo del contenido: mobile-first pero prolijo en tablet y web
-export const MAX_WIDTH = 720;
+// Ancho máximo del contenido: ocupa todo el ancho de la pantalla (solo se limita en monitores muy grandes)
+export const MAX_WIDTH = 1600;

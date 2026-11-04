@@ -53,6 +53,7 @@ async function sendMail({ to, subject, title, html, code }) {
     if (!res.ok || !data || !data.ok) {
       throw new Error(`Script de Gmail: ${data?.error || `respuesta inesperada (${res.status}). Revisá que esté implementado como "Cualquier usuario".`}`);
     }
+    console.log(`[MAIL] Enviado con Gmail (Apps Script) a ${to}`);
     return { simulated: false };
   }
   if (useBrevo) {
@@ -62,9 +63,11 @@ async function sendMail({ to, subject, title, html, code }) {
       body: JSON.stringify({ sender: { name: 'MOVA', email: brevoSender }, to: [{ email: to }], subject, htmlContent: content }),
     });
     if (!res.ok) throw new Error(`Brevo respondió ${res.status}: ${await res.text()}`);
+    console.log(`[MAIL] Enviado con Brevo a ${to}`);
     return { simulated: false };
   }
   await transporter.sendMail({ from: env.smtp.from, to, subject, html: content });
+  console.log(`[MAIL] Enviado por SMTP a ${to}`);
   return { simulated: false };
 }
 
@@ -84,5 +87,7 @@ function sendCode(to, code, tipo) {
       <p style="color:#6B6A80">Vence en 10 minutos. Si no fuiste vos, ignorá este mensaje.</p>`,
   });
 }
+
+console.log(`[MAIL] Método de envío: ${useGmailScript ? 'Gmail (Apps Script)' : useBrevo ? 'Brevo' : smtpConfigured ? 'SMTP' : 'ninguno (simulado)'}`);
 
 module.exports = { sendMail, sendCode, mailConfigured: configured };
