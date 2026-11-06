@@ -3,8 +3,14 @@ const env = require('../config/env');
 
 // Opción 0 (la más simple en Render gratis): un script de Google Apps Script que envía con tu propio Gmail.
 // Ver docs/EMAIL_CON_GMAIL.md. Variables: GMAIL_SCRIPT_URL y GMAIL_SCRIPT_SECRET.
-const gmailScriptUrl = process.env.GMAIL_SCRIPT_URL || '';
-const gmailScriptSecret = process.env.GMAIL_SCRIPT_SECRET || '';
+// Busca las variables aunque el nombre tenga espacios o minúsculas (errores comunes al cargarlas en Render)
+function envLike(...names) {
+  const wanted = names.map((n) => n.toUpperCase());
+  const key = Object.keys(process.env).find((k) => wanted.includes(k.trim().toUpperCase()));
+  return key ? String(process.env[key]).trim() : '';
+}
+const gmailScriptUrl = envLike('GMAIL_SCRIPT_URL');
+const gmailScriptSecret = envLike('GMAIL_SCRIPT_SECRET', 'GMAIL_SECRET_URL', 'GMAIL_SECRET');
 const useGmailScript = Boolean(gmailScriptUrl && gmailScriptSecret);
 // Opción 1: API HTTP de Brevo. Render bloquea los puertos SMTP en el plan gratuito.
 const brevoKey = process.env.BREVO_API_KEY || '';
@@ -88,6 +94,8 @@ function sendCode(to, code, tipo) {
   });
 }
 
+const gmailKeys = Object.keys(process.env).filter((k) => /gmail/i.test(k));
+console.log(`[MAIL] Variables de Gmail encontradas: ${gmailKeys.length ? gmailKeys.join(', ') : 'ninguna'} · URL: ${gmailScriptUrl ? (/^https:\/\/script\.google\.com\/.+\/exec$/.test(gmailScriptUrl) ? 'ok' : 'cargada pero no termina en /exec') : 'falta'} · clave: ${gmailScriptSecret ? 'ok' : 'falta'}`);
 console.log(`[MAIL] Método de envío: ${useGmailScript ? 'Gmail (Apps Script)' : useBrevo ? 'Brevo' : smtpConfigured ? 'SMTP' : 'ninguno (simulado)'}`);
 
 module.exports = { sendMail, sendCode, mailConfigured: configured };
