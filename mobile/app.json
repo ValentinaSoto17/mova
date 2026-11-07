@@ -5,7 +5,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "mova",
+    "scheme": [
+      "mova",
+      "com.eest5.mova"
+    ],
     "userInterfaceStyle": "automatic",
     "description": "MOVA: Entrena. Progresa. Evoluciona. Gestión integral de gimnasio.",
     "splash": {
@@ -67,7 +70,10 @@
       ]
     ],
     "extra": {
-      "apiUrl": "http://localhost:4000"
+      "apiUrl": "http://localhost:4000",
+      "eas": {
+        "projectId": "7bb13adb-98b9-4224-8e5c-6ab915ccce7a"
+      }
     }
   }
 }

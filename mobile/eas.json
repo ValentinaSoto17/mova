@@ -18,7 +18,8 @@
         "EXPO_PUBLIC_DEMO_MODE": "false",
         "EXPO_PUBLIC_SOCIAL_DEMO": "false",
         "EXPO_PUBLIC_GITHUB_CLIENT_ID": "Ov23liFcuDy2Y5SL6RzV",
-        "EXPO_PUBLIC_DISCORD_CLIENT_ID": "1564832363224113223"
+        "EXPO_PUBLIC_DISCORD_CLIENT_ID": "1564832363224113223", 
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "596383204491-95s558sntc89g406kbetuctbuocoluip.apps.googleusercontent.com"
       }
     },
     "production": {
