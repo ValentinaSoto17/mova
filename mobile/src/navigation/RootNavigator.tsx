@@ -128,7 +128,7 @@ function AppDrawer() {
     <Drawer.Navigator
       id="Drawer"
       drawerContent={(p) => <DrawerContent {...p} />}
-      screenOptions={{ headerShown: false, drawerStyle: { backgroundColor: c.surface, width: 300 }, overlayColor: c.overlay, drawerType: Platform.OS === 'web' ? 'front' : 'slide' }}
+      screenOptions={{ headerShown: false, drawerPosition: 'right', drawerStyle: { backgroundColor: c.surface, width: 300 }, overlayColor: c.overlay, drawerType: Platform.OS === 'web' ? 'front' : 'slide' }}
     >
       <Drawer.Screen name="Main" component={RoleTabs} options={{ title: 'Inicio', drawerIconName: 'home-variant-outline' } as DrawerOptions} />
       {role === 'Alumno' && <Drawer.Screen name="Prestamos" component={LoansScreen} options={{ title: 'Préstamo de material', drawerIconName: 'basket-outline' } as DrawerOptions} />}

@@ -34,8 +34,7 @@ const general = [
     title: 'Navegar por la app',
     steps: [
       'Abajo encontrás las pestañas principales de tu perfil.',
-      'Con el botón ☰ (arriba a la izquierda) abrís el menú lateral con el logo de MOVA: Avisos, Mi perfil, Manual y Cerrar sesión.',
-      'El logo de MOVA (arriba a la derecha) abre un menú rápido: Inicio, Mi perfil, Avisos, Manual, modo claro/oscuro y Cerrar sesión. Está en todas las pantallas de los 3 perfiles.',
+      'Tocá el logo de MOVA (arriba a la derecha) para abrir el menú: secciones de tu perfil, Avisos, Mi perfil, Manual, apariencia (Auto, Claro, Oscuro) y Cerrar sesión. En las pantallas internas, el logo te lleva al Inicio.',
       'Deslizá hacia abajo en cualquier lista para actualizarla.',
     ],
   },

@@ -1,15 +1,13 @@
 import type { StyleProp, ViewStyle } from 'react-native';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, RefreshControl, ScrollView, StyleSheet, Text, View, Pressable, useWindowDimensions } from 'react-native';
+import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, StyleSheet, Text, View, Pressable, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
-import { useAuth } from '../context/AuthContext';
-import { useFeedback } from '../context/FeedbackContext';
 import { LogoMark } from './Logo';
 import { Icon, IconButton } from './ui';
-import { font, MAX_WIDTH, radius, shadow, space } from '../theme/tokens';
+import { font, MAX_WIDTH, space } from '../theme/tokens';
 
 export interface HeaderProps {
   title?: React.ReactNode;
@@ -35,8 +33,8 @@ export interface HeaderActionProps {
 }
 
 /**
- * Encabezado principal (según el boceto): menú hamburguesa a la izquierda, título de la
- * sección y el logo de MOVA a la derecha. Es igual en los tres perfiles.
+ * Encabezado principal: título de la sección y el logo de MOVA a la derecha, que abre el menú.
+ * En pantallas internas aparece la flecha para volver. Es igual en los tres perfiles.
  */
 export function Header({ title, subtitle, back, right }: HeaderProps) {
   const { colors: c } = useTheme();
@@ -47,11 +45,7 @@ export function Header({ title, subtitle, back, right }: HeaderProps) {
   return (
     <View style={[styles.header, { paddingTop: insets.top + space.sm, backgroundColor: c.mode === 'dark' ? 'rgba(13,12,23,0.72)' : 'rgba(246,245,251,0.78)', borderBottomColor: c.border }]}>
       <View style={[styles.headerInner, { paddingHorizontal: pad }]}>
-        {back ? (
-          <IconButton icon="arrow-left" label="Volver" onPress={() => nav.goBack()} />
-        ) : (
-          <IconButton icon="menu" label="Abrir menú" onPress={() => nav.dispatch(DrawerActions.openDrawer())} />
-        )}
+        {back && <IconButton icon="arrow-left" label="Volver" onPress={() => nav.goBack()} />}
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text numberOfLines={1} style={{ fontFamily: font.extrabold, fontSize: 21, color: c.text, letterSpacing: -0.3 }}>
             {title}
@@ -63,101 +57,36 @@ export function Header({ title, subtitle, back, right }: HeaderProps) {
           )}
         </View>
         {right}
-        <QuickMenu />
+        <LogoMenuButton inSubpage={!!back} />
       </View>
     </View>
   );
 }
 
-interface MenuItem {
-  icon: string;
-  label: string;
-  onPress: () => void;
-  danger?: boolean;
-}
-
 /**
- * Logo de MOVA (arriba a la derecha): al tocarlo abre un menú rápido con
- * Inicio, Mi perfil, Avisos, Manual, modo claro/oscuro y Cerrar sesión. Igual en los 3 roles.
+ * Logo de MOVA (arriba a la derecha, igual en los 3 perfiles).
+ * - En las secciones principales abre el menú desplegable de MOVA (se despliega desde la derecha).
+ * - En las pantallas internas (detalle, formulario, chat) lleva de vuelta al Inicio.
  */
-function QuickMenu() {
-  const { colors: c, isDark, toggle } = useTheme();
-  const { user, logout } = useAuth();
-  const { confirm } = useFeedback();
+function LogoMenuButton({ inSubpage }: { inSubpage: boolean }) {
+  const { colors: c } = useTheme();
   const nav = useNavigation<any>();
-  const insets = useSafeAreaInsets();
-  const [open, setOpen] = useState(false);
-
-  // Navega dentro de la app aunque la pantalla actual esté apilada (detalle, formulario, etc.)
-  const go = (screen: string, params?: any) => {
-    setOpen(false);
-    nav.navigate('App', { screen, params });
+  const onPress = () => {
+    if (inSubpage) nav.navigate('App', { screen: 'Main', params: { screen: 'Inicio' } });
+    else nav.dispatch(DrawerActions.openDrawer());
   };
-
-  const items: MenuItem[] = user
-    ? [
-        { icon: 'home-variant-outline', label: 'Inicio', onPress: () => go('Main', { screen: 'Inicio' }) },
-        { icon: 'account-circle-outline', label: 'Mi perfil', onPress: () => go('Perfil') },
-        { icon: 'bell-outline', label: 'Avisos', onPress: () => go('Notificaciones') },
-        { icon: 'book-open-variant', label: 'Manual de usuario', onPress: () => go('Manual') },
-        { icon: isDark ? 'white-balance-sunny' : 'weather-night', label: isDark ? 'Modo claro' : 'Modo oscuro', onPress: () => toggle() },
-        {
-          icon: 'logout',
-          label: 'Cerrar sesión',
-          danger: true,
-          onPress: async () => {
-            setOpen(false);
-            const yes = await confirm({ title: '¿Cerrar sesión?', message: 'Vas a tener que volver a ingresar.', confirmText: 'Cerrar sesión', icon: 'logout' });
-            if (yes) logout();
-          },
-        },
-      ]
-    : [{ icon: isDark ? 'white-balance-sunny' : 'weather-night', label: isDark ? 'Modo claro' : 'Modo oscuro', onPress: () => toggle() }];
-
   return (
-    <>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Menú rápido de MOVA"
-        onPress={() => setOpen(true)}
-        style={({ pressed }) => [styles.logoBox, { backgroundColor: c.surfaceAlt, transform: [{ scale: pressed ? 0.94 : 1 }] }]}
-      >
-        <LogoMark size={34} />
-      </Pressable>
-      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <Pressable style={[styles.menuBackdrop, { backgroundColor: c.overlay || 'rgba(0,0,0,0.35)' }]} onPress={() => setOpen(false)}>
-          <Pressable
-            onPress={() => {}}
-            style={[styles.menu, shadow(c, 3), { top: insets.top + 64, backgroundColor: c.surface, borderColor: c.border }]}
-          >
-            <LinearGradient colors={[c.heroFrom, c.heroTo]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.menuHead}>
-              <View style={styles.menuLogo}>
-                <LogoMark size={38} />
-              </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={{ color: '#fff', fontFamily: font.extrabold, fontSize: 16 }} numberOfLines={1}>
-                  {user ? `${user.nombre} ${user.apellido}` : 'MOVA'}
-                </Text>
-                <Text style={{ color: 'rgba(255,255,255,0.85)', fontFamily: font.semibold, fontSize: 12 }} numberOfLines={1}>
-                  {user ? user.rol : 'Entrena. Progresa. Evoluciona.'}
-                </Text>
-              </View>
-            </LinearGradient>
-            {items.map((it) => (
-              <Pressable
-                key={it.label}
-                accessibilityRole="button"
-                onPress={it.onPress}
-                style={({ pressed, hovered }: any) => [styles.menuItem, (pressed || hovered) && { backgroundColor: c.surfaceAlt }]}
-              >
-                <Icon name={it.icon as any} size={20} color={it.danger ? c.danger : c.primary} />
-                <Text style={{ flex: 1, fontFamily: font.bold, fontSize: 14.5, color: it.danger ? c.danger : c.text }}>{it.label}</Text>
-              </Pressable>
-            ))}
-          </Pressable>
-        </Pressable>
-      </Modal>
-    </>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={inSubpage ? 'Ir al inicio' : 'Abrir el menú de MOVA'}
+      onPress={onPress}
+      style={({ pressed, hovered }: any) => [
+        styles.logoBox,
+        { backgroundColor: hovered ? c.primarySoft : c.surfaceAlt, transform: [{ scale: pressed ? 0.94 : 1 }] },
+      ]}
+    >
+      <LogoMark size={34} />
+    </Pressable>
   );
 }
 
@@ -227,9 +156,4 @@ const styles = StyleSheet.create({
   content: { width: '100%', maxWidth: MAX_WIDTH, alignSelf: 'center', flexGrow: 1 },
   footer: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: space.md, paddingHorizontal: space.lg },
   blob: { position: 'absolute', borderRadius: 999 },
-  menuBackdrop: { flex: 1 },
-  menu: { position: 'absolute', right: space.lg, width: 280, maxWidth: '92%', borderRadius: radius.lg, borderWidth: 1, overflow: 'hidden', paddingBottom: space.sm },
-  menuHead: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg, marginBottom: space.sm },
-  menuLogo: { width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
-  menuItem: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingVertical: 12 },
 });
