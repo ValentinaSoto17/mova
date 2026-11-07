@@ -35,7 +35,7 @@ const general = [
     steps: [
       'Abajo encontrás las pestañas principales de tu perfil.',
       'Con el botón ☰ (arriba a la izquierda) abrís el menú lateral con el logo de MOVA: Avisos, Mi perfil, Manual y Cerrar sesión.',
-      'El logo de MOVA siempre está arriba a la derecha.',
+      'El logo de MOVA (arriba a la derecha) abre un menú rápido: Inicio, Mi perfil, Avisos, Manual, modo claro/oscuro y Cerrar sesión. Está en todas las pantallas de los 3 perfiles.',
       'Deslizá hacia abajo en cualquier lista para actualizarla.',
     ],
   },
@@ -161,8 +161,12 @@ const roles = {
   Administrador: [
     {
       icon: 'view-dashboard',
-      title: 'Estadísticas',
-      steps: ['Métricas globales: alumnos activos, bloqueados, entrenamientos de la semana, asistencias de los últimos 14 días.', 'Rutinas más completadas, sesiones por entrenador, préstamos y cuotas por vencer.'],
+      title: 'Inicio: Para hoy y estadísticas',
+      steps: [
+        '"Para hoy" muestra lo que hay que atender: préstamos por aprobar, material sin devolver, consultas sin responder, cuotas que vencen esta semana y cuentas bloqueadas. Tocá una tarjeta para ir a resolverlo.',
+        '"Accesos rápidos": nuevo usuario, registrar un pago, ver stock y nuevo mensaje.',
+        '"Cómo va el gimnasio": entrenamientos de la semana, alumnos, asistencias de 14 días, rutinas más completadas y sesiones por entrenador.',
+      ],
     },
     {
       icon: 'account-cog',
