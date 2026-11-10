@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -20,6 +21,17 @@ export default function MessagesScreen({ navigation }: MessagesScreenProps) {
   const { data, error, loading, refreshing, refresh, reload } = useApi('/messages/conversations');
   const [filter, setFilter] = useState('todos');
   const staff = user.rol !== 'Alumno';
+
+  // La lista de conversaciones también se actualiza sola (cada 8 segundos) mientras está abierta
+  useFocusEffect(
+    useCallback(() => {
+      const t = setInterval(() => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+        reload('poll');
+      }, 8000);
+      return () => clearInterval(t);
+    }, [reload])
+  );
 
   const items = (data || []).filter((x) => filter === 'todos' || x.tipo === filter || (filter === 'usuario' && x.tipo === 'usuario'));
   const unreadGym = (data || []).filter((x) => x.tipo === 'gimnasio').reduce((a, b) => a + Number(b.sin_leer || 0), 0);

@@ -15,7 +15,7 @@ export function useApi(path, body = {}, { auto = true } = {}) {
   const first = useRef(true);
 
   const load = useCallback(
-    async (mode = 'load') => {
+    async (mode: 'load' | 'refresh' | 'poll' = 'load') => {
       if (mode === 'refresh') setRefreshing(true);
       else if (first.current) setLoading(true);
       try {
@@ -24,7 +24,8 @@ export function useApi(path, body = {}, { auto = true } = {}) {
         setError(null);
         return d;
       } catch (e) {
-        setError(e);
+        // Las actualizaciones automáticas (mode 'poll') no tapan la pantalla si falla una sola vez
+        if (mode !== 'poll') setError(e);
         return null;
       } finally {
         first.current = false;

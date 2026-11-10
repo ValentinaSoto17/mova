@@ -140,6 +140,7 @@ exports.send = async (req, res) => {
     req.body
   );
   let r;
+  let emailInfo = null;
   if (d.tipo === 'usuario') {
     const other = await canTalk(me, d.id);
     if (!other) throw errors.forbidden('No podés enviarle mensajes a este usuario');
@@ -157,14 +158,24 @@ exports.send = async (req, res) => {
     const prov = await one('SELECT * FROM suppliers WHERE id_proveedor = ?', [d.id]);
     if (!prov) throw errors.notFound('Distribuidora no encontrada');
     r = await query('INSERT INTO messages (id_emisor, id_proveedor, contenido) VALUES (?, ?, ?)', [me.id_usuario, d.id, d.contenido]);
-    await sendMail({
-      to: prov.email,
-      subject: `Pedido de MOVA Gym - ${me.nombre} ${me.apellido}`,
-      html: `<p>${d.contenido.replace(/</g, '&lt;')}</p><p>Responder a: ${me.email}</p>`,
-    }).catch((e) => console.error('[MAIL]', e.message));
+    // El mensaje sale por email a la casilla de la distribuidora. Se envía desde el Gmail del gimnasio
+    // (script de Google), así que si la distribuidora responde, la respuesta llega a ese Gmail.
+    const texto = d.contenido.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>');
+    try {
+      const out = await sendMail({
+        to: prov.email,
+        subject: `Mensaje de MOVA Gym para ${prov.nombre}`,
+        title: `Mensaje para ${prov.nombre}`,
+        html: `<p>${texto}</p><p style="color:#6b7280">Enviado por ${me.nombre} ${me.apellido} (administración de MOVA). Para responder, contestá este email.</p>`,
+      });
+      emailInfo = { enviado: !out?.simulated, simulado: Boolean(out?.simulated), destino: prov.email };
+    } catch (e) {
+      console.error('[MAIL] No se pudo enviar a la distribuidora:', e.message);
+      emailInfo = { enviado: false, destino: prov.email, error: 'No se pudo enviar el email. El mensaje quedó guardado en MOVA.' };
+    }
   }
   const msg = await one('SELECT id_mensaje, id_emisor, contenido, fecha_envio FROM messages WHERE id_mensaje = ?', [r.insertId]);
-  return ok(res, { ...msg, mio: true, emisor: `${me.nombre} ${me.apellido}` }, 201);
+  return ok(res, { ...msg, mio: true, emisor: `${me.nombre} ${me.apellido}`, ...(emailInfo ? { email: emailInfo } : {}) }, 201);
 };
 
 // POST /api/messages/suppliers -> listar / crear / editar distribuidoras (admin)

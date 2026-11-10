@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../../context/ThemeContext';
 import { api } from '../../api/client';
 import { useApi } from '../../hooks/useApi';
@@ -22,12 +23,46 @@ export default function ChatScreen({ route }: ChatScreenProps) {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<any>(null);
   const list = useRef(null);
+  const lastCount = useRef(0);
+  const [emailNote, setEmailNote] = useState<{ ok: boolean; text: string } | null>(null);
+  const [editMail, setEditMail] = useState(false);
+  const [newMail, setNewMail] = useState('');
+  const [mailError, setMailError] = useState<string | null>(null);
 
-  // Actualiza la conversación cada 8 segundos
-  useEffect(() => {
-    const t = setInterval(() => reload(), 8000);
-    return () => clearInterval(t);
-  }, [reload]);
+  // Chat en tiempo real: mientras la conversación está abierta se actualiza cada 3 segundos
+  // (se pausa si la pestaña del navegador no está visible, para no gastar datos).
+  useFocusEffect(
+    useCallback(() => {
+      const t = setInterval(() => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+        reload('poll');
+      }, 3000);
+      return () => clearInterval(t);
+    }, [reload])
+  );
+
+  // Baja al último mensaje solo cuando llega uno nuevo (no mientras se leen mensajes viejos)
+  const scrollIfNew = () => {
+    const n = data?.mensajes?.length || 0;
+    if (n !== lastCount.current) {
+      lastCount.current = n;
+      list.current?.scrollToEnd({ animated: true });
+    }
+  };
+
+  // Cambiar el email de la distribuidora (solo administrador)
+  const saveMail = async () => {
+    setMailError(null);
+    try {
+      const t = data?.titulo || {};
+      await api('/messages/suppliers', { accion: 'editar', id_proveedor: id, nombre: t.nombre, rubro: t.rol, email: newMail.trim(), telefono: t.telefono || null });
+      setData((d) => ({ ...d, titulo: { ...d.titulo, email: newMail.trim() } }));
+      setEditMail(false);
+      setEmailNote({ ok: true, text: `Listo: los próximos mensajes se envían a ${newMail.trim()}` });
+    } catch (e) {
+      setMailError(e.fields?.email || e.message);
+    }
+  };
 
   const send = async () => {
     const contenido = text.trim();
@@ -38,6 +73,13 @@ export default function ChatScreen({ route }: ChatScreenProps) {
       const msg = await api('/messages/send', { tipo, id, contenido });
       setData((d) => ({ ...d, mensajes: [...(d?.mensajes || []), msg] }));
       setText('');
+      if (msg?.email) {
+        setEmailNote(
+          msg.email.enviado
+            ? { ok: true, text: `Enviado por email a ${msg.email.destino}` }
+            : { ok: false, text: msg.email.error || `No se envió el email (el servidor no tiene configurado el envío de correos). El mensaje quedó guardado en MOVA.` }
+        );
+      }
     } catch (e) {
       setSendError(e);
     } finally {
@@ -50,7 +92,48 @@ export default function ChatScreen({ route }: ChatScreenProps) {
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
-      <Header back title={titulo} subtitle={data?.titulo?.rol || (tipo === 'proveedor' ? 'Distribuidora · se envía por email' : '')} />
+      <Header
+        back
+        title={titulo}
+        subtitle={tipo === 'proveedor' ? `Distribuidora · ${data?.titulo?.email || 'se envía por email'}` : data?.titulo?.rol || ''}
+      />
+      {tipo === 'proveedor' && data?.titulo && (
+        <View style={[styles.mailBar, { backgroundColor: c.surface, borderBottomColor: c.border }]}>
+          <View style={{ width: '100%', maxWidth: MAX_WIDTH, alignSelf: 'center', gap: space.sm }}>
+            {editMail ? (
+              <View style={styles.row}>
+                <TextInput
+                  value={newMail}
+                  onChangeText={setNewMail}
+                  placeholder="email@distribuidora.com"
+                  placeholderTextColor={c.textSoft}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  style={[styles.input, { backgroundColor: c.surfaceAlt, color: c.text }]}
+                  accessibilityLabel="Email de la distribuidora"
+                />
+                <Pressable onPress={saveMail} accessibilityRole="button" style={[styles.mailBtn, { backgroundColor: c.primary }]}>
+                  <T v="small" color={c.primaryText} style={{ fontFamily: font.bold }}>Guardar</T>
+                </Pressable>
+                <Pressable onPress={() => { setEditMail(false); setMailError(null); }} accessibilityRole="button" style={styles.mailBtn}>
+                  <T v="small" color={c.textMuted} style={{ fontFamily: font.bold }}>Cancelar</T>
+                </Pressable>
+              </View>
+            ) : (
+              <View style={[styles.row, { alignItems: 'center' }]}>
+                <Icon name="email-fast-outline" size={18} color={c.primary} />
+                <T v="small" color={c.textMuted} style={{ flex: 1 }}>
+                  Cada mensaje se envía por email a <T v="small" color={c.text} style={{ fontFamily: font.bold }}>{data.titulo.email}</T>. Las respuestas llegan al Gmail del gimnasio.
+                </T>
+                <Pressable onPress={() => { setNewMail(data.titulo.email || ''); setEditMail(true); }} accessibilityRole="button">
+                  <T v="small" color={c.primary} style={{ fontFamily: font.bold }}>Cambiar email</T>
+                </Pressable>
+              </View>
+            )}
+            {mailError && <Banner message={mailError} />}
+          </View>
+        </View>
+      )}
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {loading ? (
           <Loading />
@@ -61,7 +144,7 @@ export default function ChatScreen({ route }: ChatScreenProps) {
             ref={list}
             data={msgs}
             keyExtractor={(m) => String(m.id_mensaje)}
-            onContentSizeChange={() => list.current?.scrollToEnd({ animated: false })}
+            onContentSizeChange={scrollIfNew}
             contentContainerStyle={{ padding: space.lg, gap: 6, width: '100%', maxWidth: MAX_WIDTH, alignSelf: 'center', flexGrow: 1 }}
             ListEmptyComponent={
               <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: space.xxl }}>
@@ -102,6 +185,7 @@ export default function ChatScreen({ route }: ChatScreenProps) {
         <View style={[styles.bar, { backgroundColor: c.surface, borderTopColor: c.border, paddingBottom: insets.bottom + space.sm }]}>
           <View style={{ width: '100%', maxWidth: MAX_WIDTH, alignSelf: 'center' }}>
             {sendError && <Banner message={`${sendError.message}${sendError.status ? ` (${sendError.status})` : ''}`} />}
+            {emailNote && <Banner kind={emailNote.ok ? 'success' : 'warning'} message={emailNote.text} />}
             <View style={styles.row}>
               <TextInput
                 value={text}
@@ -138,4 +222,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-end', gap: space.sm },
   input: { flex: 1, minHeight: 44, maxHeight: 120, borderRadius: 22, paddingHorizontal: 16, paddingVertical: 11, fontFamily: font.medium, fontSize: 15, outlineStyle: 'none' as any },
   send: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  mailBar: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: space.sm, paddingHorizontal: space.lg },
+  mailBtn: { height: 44, paddingHorizontal: space.md, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 });
