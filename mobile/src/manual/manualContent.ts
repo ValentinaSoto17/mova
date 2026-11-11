@@ -34,7 +34,7 @@ const general = [
     title: 'Navegar por la app',
     steps: [
       'Abajo encontrás las pestañas principales de tu perfil.',
-      'Tocá el logo de MOVA (arriba a la derecha) para abrir el menú: secciones de tu perfil, Avisos, Mi perfil, Manual, apariencia (Auto, Claro, Oscuro) y Cerrar sesión. En las pantallas internas, el logo te lleva al Inicio.',
+      'Tocá el logo de MOVA (arriba a la izquierda) para abrir el menú: secciones de tu perfil, Avisos, Mi perfil, Manual, apariencia (Auto, Claro, Oscuro) y Cerrar sesión. En las pantallas internas, el logo te lleva al Inicio.',
       'Deslizá hacia abajo en cualquier lista para actualizarla.',
     ],
   },

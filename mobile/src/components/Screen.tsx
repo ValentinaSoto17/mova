@@ -33,7 +33,7 @@ export interface HeaderActionProps {
 }
 
 /**
- * Encabezado principal: título de la sección y el logo de MOVA a la derecha, que abre el menú.
+ * Encabezado principal: logo de MOVA a la izquierda (abre el menú) y el título de la sección.
  * En pantallas internas aparece la flecha para volver. Es igual en los tres perfiles.
  */
 export function Header({ title, subtitle, back, right }: HeaderProps) {
@@ -46,6 +46,7 @@ export function Header({ title, subtitle, back, right }: HeaderProps) {
     <View style={[styles.header, { paddingTop: insets.top + space.sm, backgroundColor: c.mode === 'dark' ? 'rgba(13,12,23,0.72)' : 'rgba(246,245,251,0.78)', borderBottomColor: c.border }]}>
       <View style={[styles.headerInner, { paddingHorizontal: pad }]}>
         {back && <IconButton icon="arrow-left" label="Volver" onPress={() => nav.goBack()} />}
+        <LogoMenuButton inSubpage={!!back} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text numberOfLines={1} style={{ fontFamily: font.extrabold, fontSize: 21, color: c.text, letterSpacing: -0.3 }}>
             {title}
@@ -57,15 +58,14 @@ export function Header({ title, subtitle, back, right }: HeaderProps) {
           )}
         </View>
         {right}
-        <LogoMenuButton inSubpage={!!back} />
       </View>
     </View>
   );
 }
 
 /**
- * Logo de MOVA (arriba a la derecha, igual en los 3 perfiles).
- * - En las secciones principales abre el menú desplegable de MOVA (se despliega desde la derecha).
+ * Logo de MOVA (arriba a la izquierda, igual en los 3 perfiles).
+ * - En las secciones principales abre el menú desplegable de MOVA (se despliega desde la izquierda).
  * - En las pantallas internas (detalle, formulario, chat) lleva de vuelta al Inicio.
  */
 function LogoMenuButton({ inSubpage }: { inSubpage: boolean }) {
