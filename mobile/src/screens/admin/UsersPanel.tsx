@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useApi } from '../../hooks/useApi';
@@ -8,16 +8,24 @@ import { space } from '../../theme/tokens';
 
 export interface UsersPanelProps {
   navigation?: any;
+  route?: any;
 }
 
 const ROLES = [null, 'Alumno', 'Entrenador', 'Administrador'];
 
 /** Panel de administración de usuarios y entrenadores. */
-export default function UsersPanel({ navigation }: UsersPanelProps) {
+export default function UsersPanel({ navigation, route }: UsersPanelProps) {
   const { colors: c } = useTheme();
   const [rol, setRol] = useState<any>(null);
   const [estado, setEstado] = useState<any>(null);
   const [q, setQ] = useState('');
+  // Desde el Inicio ("Cuentas bloqueadas") se llega con el filtro ya aplicado
+  useEffect(() => {
+    if (route?.params?.estado) {
+      setEstado(route.params.estado);
+      navigation.setParams({ estado: undefined });
+    }
+  }, [route?.params?.estado]);
   const { data, error, loading, refreshing, refresh, reload } = useApi('/users/list', { ...(rol ? { rol } : {}), ...(estado ? { estado } : {}) });
   const list = (data || []).filter((u) => `${u.nombre} ${u.apellido} ${u.email}`.toLowerCase().includes(q.toLowerCase()));
 

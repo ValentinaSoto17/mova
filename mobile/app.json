@@ -70,7 +70,7 @@
       ]
     ],
     "extra": {
-      "apiUrl": "http://localhost:4000",
+      "apiUrl": "https://mova-nwyl.onrender.com",
       "eas": {
         "projectId": "7bb13adb-98b9-4224-8e5c-6ab915ccce7a"
       }

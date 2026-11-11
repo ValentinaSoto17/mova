@@ -65,7 +65,7 @@ export default function DrawerContent({ state, descriptors, navigation }: Drawer
             return (
               <Pressable
                 key={route.key}
-                onPress={() => navigation.navigate(route.name)}
+                onPress={() => (route.name === 'Main' ? navigation.navigate('Main', { screen: 'Inicio' }) : navigation.navigate(route.name))}
                 accessibilityRole="button"
                 accessibilityState={{ selected: focused }}
                 style={({ pressed }) => [styles.item, { backgroundColor: focused ? c.primarySoft : pressed ? c.surfaceAlt : 'transparent' }]}

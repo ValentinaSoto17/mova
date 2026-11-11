@@ -51,7 +51,7 @@ export default function AdminHome({ navigation }: AdminHomeProps) {
         { key: 'atrasados', icon: 'clock-alert-outline', title: 'Material sin devolver', count: Number(s.prestamos.atrasados || 0), done: 'Todo devuelto', color: c.danger, go: () => navigation.navigate('Stock') },
         { key: 'consultas', icon: 'message-question-outline', title: 'Consultas sin responder', count: Number(s.mensajes.sin_responder || 0), done: 'Todas respondidas', color: c.primary, go: () => navigation.navigate('Mensajes') },
         { key: 'cuotas', icon: 'card-account-details-outline', title: 'Cuotas que vencen esta semana', count: (s.vencimientos || []).length, done: 'Sin vencimientos', color: c.gold, go: () => navigation.navigate('Cuotas') },
-        { key: 'bloqueados', icon: 'account-lock-outline', title: 'Cuentas bloqueadas', count: Number(s.usuarios.bloqueados || 0), done: 'Ninguna bloqueada', color: c.danger, go: () => navigation.navigate('Usuarios') },
+        { key: 'bloqueados', icon: 'account-lock-outline', title: 'Cuentas bloqueadas', count: Number(s.usuarios.bloqueados || 0), done: 'Ninguna bloqueada', color: c.danger, go: () => navigation.navigate('Usuarios', { estado: 'bloqueado' }) },
       ].sort((x, y) => Number(y.count > 0) - Number(x.count > 0))
     : [];
   const pendientes = tareas.reduce((n, t) => n + (t.count > 0 ? 1 : 0), 0);
